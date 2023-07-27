@@ -3,6 +3,7 @@ using APIIntro.Entities;
 using APIIntro.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
+using APIIntro.Dtos.Categories;
 
 namespace APIIntro.Controllers
 {
@@ -37,12 +38,18 @@ namespace APIIntro.Controllers
 
         }
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody]Category category)
+        public async Task<IActionResult> Create([FromBody]CategoryPostDto dto)
         {
-            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == category.Name.Trim().ToLower()))
+            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower()))
             {
-                return StatusCode(400, new { description = $"{category.Name} Alredy exists" });
+                return StatusCode(400, new { description = $"{dto.Name} Alredy exists" });
             }
+            Category category = new Category
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+            };
+
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
             return StatusCode(201, category);
@@ -62,11 +69,11 @@ namespace APIIntro.Controllers
             return StatusCode(204);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult>Update(int id, [FromBody] Category category)
+        public async Task<IActionResult>Update(int id, [FromBody] CategoryPostDto dto)
         {
-            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == category.Name.Trim().ToLower() && X.Id!=id))
+            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower() && X.Id!=id))
             {
-                return StatusCode(400, new { description = $"{category.Name} Already exists" });
+                return StatusCode(400, new { description = $"{dto.Name} Already exists" });
             }
             Category? updated = await _context.Categories
                 .Where(x => x.Id == id)
@@ -77,6 +84,7 @@ namespace APIIntro.Controllers
                 return StatusCode(404, new { description = "Category is null" } );
             }
             updated.Name = category.Name;
+            updated.Description = category.Description; 
             await _context.SaveChangesAsync();
             return StatusCode(204);
 
