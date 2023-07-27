@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using APIIntro.Entities; 
+﻿using Microsoft.AspNetCore.Mvc;
+using APIIntro.Entities;
+using APIIntro.Contexts;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata.Ecma335;
 
 namespace APIIntro.Controllers
 {
@@ -10,31 +10,76 @@ namespace APIIntro.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        static List<Category> categories = new List<Category>
-        {
-            new Category { Name = "Ipad" },
-            new Category { Name = "Earpods" },
-            new Category { Name = "Iphone" },
-            new Category { Name = "Accessories" }
-        };
+        private readonly ApiDbContext _context;
 
+        public CategoriesController(ApiDbContext context)
+        {
+            _context = context;
+        }
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            return Ok(categories);
+            IEnumerable<Category> categories = await _context.Categories.ToListAsync();
+            return StatusCode(200, categories);
         }
-
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            return Ok(categories[0]);
-        }
+            Category? category = await _context.Categories
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
 
+            if (category == null)
+            {
+                return StatusCode(404, category);
+            }
+            return StatusCode(200, category);
+
+        }
         [HttpPost]
-        public IActionResult Create(Category category)
+        public async Task<IActionResult> Create([FromBody]Category category)
         {
-            categories.Add(category);
-            return Ok();
+            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == category.Name.Trim().ToLower()))
+            {
+                return StatusCode(400, new { description = $"{category.Name} Alredy exists" });
+            }
+            await _context.Categories.AddAsync(category);
+            await _context.SaveChangesAsync();
+            return StatusCode(201, category);
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            Category? category = await _context.Categories
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+            if (category == null)
+            {
+                return StatusCode(404);
+            }
+            _context.Remove(category);
+            await _context.SaveChangesAsync();
+            return StatusCode(204);
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult>Update(int id, [FromBody] Category category)
+        {
+            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == category.Name.Trim().ToLower() && X.Id!=id))
+            {
+                return StatusCode(400, new { description = $"{category.Name} Already exists" });
+            }
+            Category? updated = await _context.Categories
+                .Where(x => x.Id == id)
+                .FirstOrDefaultAsync();
+
+            if(updated == null)
+            {
+                return StatusCode(404, new { description = "Category is null" } );
+            }
+            updated.Name = category.Name;
+            await _context.SaveChangesAsync();
+            return StatusCode(204);
+
         }
     }
 }
