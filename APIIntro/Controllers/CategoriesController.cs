@@ -4,18 +4,21 @@ using APIIntro.Contexts;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using APIIntro.Dtos.Categories;
+using AutoMapper;
 
 namespace APIIntro.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
     {
         private readonly ApiDbContext _context;
+        private readonly IMapper _mapper;
 
-        public CategoriesController(ApiDbContext context)
+        public CategoriesController(ApiDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -38,17 +41,14 @@ namespace APIIntro.Controllers
 
         }
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody]CategoryPostDto dto)
+        public async Task<IActionResult> Create([FromBody] CategoryPostDto dto)
         {
             if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower()))
             {
                 return StatusCode(400, new { description = $"{dto.Name} Alredy exists" });
             }
-            Category category = new Category
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-            };
+            Category category = _mapper.Map<Category>(dto);
+       
 
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
@@ -69,9 +69,9 @@ namespace APIIntro.Controllers
             return StatusCode(204);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult>Update(int id, [FromBody] CategoryPostDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] CategoryUpdateDto dto)
         {
-            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower() && X.Id!=id))
+            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower() && X.Id != id))
             {
                 return StatusCode(400, new { description = $"{dto.Name} Already exists" });
             }
@@ -79,15 +79,18 @@ namespace APIIntro.Controllers
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
 
-            if(updated == null)
+            if (updated == null)
             {
-                return StatusCode(404, new { description = "Category is null" } );
+                return StatusCode(404, new { description = "Category is null" });
             }
-            updated.Name = category.Name;
-            updated.Description = category.Description; 
+
+            updated = _mapper.Map<Category>(dto);
             await _context.SaveChangesAsync();
             return StatusCode(204);
-
         }
+       // private Category Map(CategoryPostDto dto)
+       // {
+         //   return new Category { Name = dto.Name, Description = dto.Description };
+       // }
     }
 }
