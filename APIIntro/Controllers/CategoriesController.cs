@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using APIIntro.Dtos.Categories;
 using AutoMapper;
+using APIIntro.Repositories;
 
 namespace APIIntro.Controllers
 {
@@ -12,46 +13,53 @@ namespace APIIntro.Controllers
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
     {
-        private readonly ApiDbContext _context;
         private readonly IMapper _mapper;
+        private readonly CategoryRepository _repository;
 
-        public CategoriesController(ApiDbContext context, IMapper mapper)
+        public CategoriesController(IMapper mapper, CategoryRepository repository)
         {
-            _context = context;
             _mapper = mapper;
+           _repository = repository;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            IEnumerable<Category> categories = await _context.Categories.ToListAsync();
+            IQueryable<Category> query = await _repository.GetAllAsync();
+
+            List<CategoryGetDto> categories = new List<CategoryGetDto>();
+
+            categories= await query.Select(x=> new CategoryGetDto { Name=x.Name}).ToListAsync();  
+            
             return StatusCode(200, categories);
         }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            Category? category = await _context.Categories
-                .Where(x => x.Id == id)
-                .FirstOrDefaultAsync();
+            Category? category = await _repository.GetByIdAsync(id);
+               
 
             if (category == null)
             {
-                return StatusCode(404, category);
+                return StatusCode(404);
             }
-            return StatusCode(200, category);
+            CategoryGetDto getDto=_mapper.Map<CategoryGetDto>(category);
+
+            return StatusCode(200, getDto);
 
         }
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CategoryPostDto dto)
         {
-            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower()))
+            if (await _repository.IsExist(dto.Name))
             {
                 return StatusCode(400, new { description = $"{dto.Name} Alredy exists" });
             }
             Category category = _mapper.Map<Category>(dto);
-       
 
-            await _context.Categories.AddAsync(category);
-            await _context.SaveChangesAsync();
+
+            await _repository.AddAsync(category);
+            await _repository.SaveAsync();
             return StatusCode(201, category);
         }
         [HttpDelete("{id}")]

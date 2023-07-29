@@ -10,6 +10,7 @@ namespace APIIntro.Profiles.Categories
         {
             CreateMap<CategoryPostDto, Category>();
             CreateMap<CategoryUpdateDto, Category>();
+            CreateMap<Category,CategoryGetDto>();
         }
     }
 }
