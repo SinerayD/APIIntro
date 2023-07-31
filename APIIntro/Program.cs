@@ -1,10 +1,10 @@
-using APIIntro.Contexts;
+using APIIntro.Core.Repositories.Interfaces;
+using APIIntro.Data.Contexts;
+using APIIntro.Data.Repositories.Implementations;
 using APIIntro.Profiles.Categories;
-using APIIntro.Repositories.Implementations;
-using APIIntro.Repositories.Interfaces;
+using APIIntro.Service.Validations.Categories;
 using APIIntro.Services.Implementations;
 using APIIntro.Services.Interfaces;
-using APIIntro.Validations.Categories;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 

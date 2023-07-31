@@ -1,13 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using APIIntro.Entities;
-using APIIntro.Contexts;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata.Ecma335;
-using APIIntro.Dtos.Categories;
-using AutoMapper;
-using APIIntro.Repositories.Implementations;
-using APIIntro.Repositories.Interfaces;
 using APIIntro.Services.Interfaces;
+using APIIntro.Service.Dtos.Categories;
 
 namespace APIIntro.Controllers
 {
@@ -38,7 +31,7 @@ namespace APIIntro.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CategoryPostDto dto)
+        public async Task<IActionResult> Create([FromBody] ProductPostDto dto)
         {
             var result = await _categoryService.CreateAsync(dto);
             return StatusCode(result.StatusCode, result);
@@ -51,7 +44,7 @@ namespace APIIntro.Controllers
             return StatusCode(result.StatusCode);
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] CategoryUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] ProductUpdateDto dto)
         {
             var result = await _categoryService.UpdateAsync(id, dto);
             return StatusCode(result.StatusCode, result);
