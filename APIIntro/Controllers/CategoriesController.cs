@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata.Ecma335;
 using APIIntro.Dtos.Categories;
 using AutoMapper;
-using APIIntro.Repositories;
+using APIIntro.Repositories.Implementations;
+using APIIntro.Repositories.Interfaces;
+using APIIntro.Services.Interfaces;
 
 namespace APIIntro.Controllers
 {
@@ -13,92 +15,48 @@ namespace APIIntro.Controllers
     [Route("api/[controller]")]
     public class CategoriesController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private readonly CategoryRepository _repository;
+        private readonly ICategoryService _categoryService;
 
-        public CategoriesController(IMapper mapper, CategoryRepository repository)
+        public CategoriesController(ICategoryService categoryService)
         {
-            _mapper = mapper;
-           _repository = repository;
+            _categoryService = categoryService;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            IQueryable<Category> query = await _repository.GetAllAsync();
-
-            List<CategoryGetDto> categories = new List<CategoryGetDto>();
-
-            categories= await query.Select(x=> new CategoryGetDto { Name=x.Name}).ToListAsync();  
-            
-            return StatusCode(200, categories);
+            return StatusCode(200, await _categoryService.GetAllAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            Category? category = await _repository.GetByIdAsync(id);
-               
+            var result = await _categoryService.GetAsync(id);
 
-            if (category == null)
-            {
-                return StatusCode(404);
-            }
-            CategoryGetDto getDto=_mapper.Map<CategoryGetDto>(category);
-
-            return StatusCode(200, getDto);
+            return StatusCode(result.StatusCode, result);
 
         }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CategoryPostDto dto)
         {
-            if (await _repository.IsExist(dto.Name))
-            {
-                return StatusCode(400, new { description = $"{dto.Name} Alredy exists" });
-            }
-            Category category = _mapper.Map<Category>(dto);
-
-
-            await _repository.AddAsync(category);
-            await _repository.SaveAsync();
-            return StatusCode(201, category);
+            var result = await _categoryService.CreateAsync(dto);
+            return StatusCode(result.StatusCode, result);
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            Category? category = await _context.Categories
-                .Where(x => x.Id == id)
-                .FirstOrDefaultAsync();
-            if (category == null)
-            {
-                return StatusCode(404);
-            }
-            _context.Remove(category);
-            await _context.SaveChangesAsync();
-            return StatusCode(204);
+            var result = await _categoryService.RemoveAsync(id);
+            return StatusCode(result.StatusCode);
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] CategoryUpdateDto dto)
         {
-            if (_context.Categories.Any(X => X.Name.Trim().ToLower() == dto.Name.Trim().ToLower() && X.Id != id))
-            {
-                return StatusCode(400, new { description = $"{dto.Name} Already exists" });
-            }
-            Category? updated = await _context.Categories
-                .Where(x => x.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (updated == null)
-            {
-                return StatusCode(404, new { description = "Category is null" });
-            }
-
-            updated = _mapper.Map<Category>(dto);
-            await _context.SaveChangesAsync();
-            return StatusCode(204);
+            var result = await _categoryService.UpdateAsync(id, dto);
+            return StatusCode(result.StatusCode, result);
         }
-       // private Category Map(CategoryPostDto dto)
-       // {
-         //   return new Category { Name = dto.Name, Description = dto.Description };
-       // }
+
+      
     }
 }
