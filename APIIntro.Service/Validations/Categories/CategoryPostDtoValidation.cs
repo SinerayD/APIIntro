@@ -1,4 +1,5 @@
 ﻿using APIIntro.Service.Dtos.Categories;
+using APIIntro.Service.Dtos.Products;
 using FluentValidation;
 
 namespace APIIntro.Service.Validations.Categories
@@ -13,11 +14,7 @@ namespace APIIntro.Service.Validations.Categories
                 .MinimumLength(3)
                 .MaximumLength(30);
 
-            RuleFor(x => x.Description)
-                .NotEmpty().WithMessage("Name can not be empty")
-                .NotNull().WithMessage("Name can not be null")
-                .MinimumLength(3)
-                .MaximumLength(100);
+           
         }
     }
 }

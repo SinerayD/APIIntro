@@ -23,9 +23,9 @@ namespace APIIntro.Services.Implementations
         {
             IQueryable<Category> query = await _repository.GetAllAsync(x => !x.IsDeleted);
 
-            List<ProductGetDto> categories = new List<ProductGetDto>();
+            List<CategoryGetDto> categories = new List<CategoryGetDto>();
 
-            categories = await query.Select(x => new ProductGetDto { Name = x.Name }).ToListAsync();
+            categories = await query.Select(x => new CategoryGetDto { Name = x.Name }).ToListAsync();
             
             return new ApiResponse { Items=categories,StatusCode=200};
         }
@@ -39,12 +39,12 @@ namespace APIIntro.Services.Implementations
                 return new ApiResponse { StatusCode = 404, Message="Item not found" };
             }
 
-            ProductGetDto getDto = _mapper.Map<ProductGetDto>(category);
+            CategoryGetDto getDto = _mapper.Map<CategoryGetDto>(category);
 
             return new ApiResponse { Items = getDto, StatusCode = 200 };
         }
 
-        public async Task<ApiResponse> CreateAsync(ProductPostDto dto)
+        public async Task<ApiResponse> CreateAsync(CategoryPostDto dto)
         {
             if(await _repository.IsExist(x => x.Name.Trim().ToLower() == dto.Name.Trim().ToLower()))
             {
@@ -71,7 +71,7 @@ namespace APIIntro.Services.Implementations
             return new ApiResponse { StatusCode = 200 };
         }
 
-        public async Task<ApiResponse> UpdateAsync(int id, ProductUpdateDto dto)
+        public async Task<ApiResponse> UpdateAsync(int id, CategoryUpdateDto dto)
         {
             Category? category = await _repository.GetAsync(x => !x.IsDeleted && x.Id == id);
 

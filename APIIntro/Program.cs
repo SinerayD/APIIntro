@@ -1,7 +1,10 @@
+using APIIntro.Core.Repositories;
 using APIIntro.Core.Repositories.Interfaces;
 using APIIntro.Data.Contexts;
 using APIIntro.Data.Repositories.Implementations;
 using APIIntro.Profiles.Categories;
+using APIIntro.Service.Services.Implementations;
+using APIIntro.Service.Services.Interfaces;
 using APIIntro.Service.Validations.Categories;
 using APIIntro.Services.Implementations;
 using APIIntro.Services.Interfaces;
@@ -19,6 +22,8 @@ builder.Services.AddDbContext<ApiDbContext>(opt =>
 builder.Services.AddControllers()?.AddFluentValidation(fvc => fvc.RegisterValidatorsFromAssemblyContaining<CategoryPostDtoValidation>());
 builder.Services.AddAutoMapper(typeof(CategoryProfile));
 builder.Services.AddScoped<ICategoryRepository,CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

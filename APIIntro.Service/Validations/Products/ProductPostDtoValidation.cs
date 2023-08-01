@@ -28,4 +28,3 @@ namespace APIIntro.Service.Validations.Products
         }
     }
 }
-.

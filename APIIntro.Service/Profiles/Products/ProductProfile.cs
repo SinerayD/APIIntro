@@ -1,5 +1,6 @@
 ﻿using APIIntro.Core.Entities;
 using APIIntro.Service.Dtos.Categories;
+using APIIntro.Service.Dtos.Products;
 using AutoMapper;
 
 

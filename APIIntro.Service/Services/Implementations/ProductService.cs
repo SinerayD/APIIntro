@@ -8,6 +8,7 @@ using APIIntro.Service.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using System.Xml.Linq;
 
 namespace APIIntro.Service.Services.Implementations
 {
@@ -41,40 +42,66 @@ namespace APIIntro.Service.Services.Implementations
             return new ApiResponse { StatusCode = 201 };
         }
 
-        public Task<ApiResponse> CreateAsync(Dtos.Categories.ProductPostDto dto)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<ApiResponse> GetAllAsync()
         {
-            var query = await _productRepository.GetAllAsync(x => !x.IsDeleted);
+            var query = await _productRepository.GetAllAsync(x => !x.IsDeleted,"Category");
             IEnumerable<ProductGetDto> productGetDtos = await query
-                .Select(x => new ProductGetDto { Image = x.Image, CategoryId = x.CategoryId, Name = x.Name, Price = x.Price })
+                .Select(x => new ProductGetDto { Image = x.Image, CategoryId = x.CategoryId, Name = x.Name, Price = x.Price, 
+                    CategoryName=x.Category.Name })
                 .ToListAsync();
 
             return new ApiResponse { Items = productGetDtos, StatusCode = 200 };
         }
 
-        public async Task<ApiResponse> GetAllAsync()
+        public async Task<ApiResponse> GetAsync(int id)
         {
-            var query = await _productRepository.GetAllAsync(x => !x.IsDeleted);
-            List<ProductGetDto> productGetDtos = await query
-                .Select(x => new ProductGetDto { Image = x.Image, CategoryId = x.CategoryId, Name = x.Name, Price = x.Price })
-                .ToListAsync();
+            Product product = await _productRepository.GetAsync(x => !x.IsDeleted && x.Id == id, "Category");
 
-            return new ApiResponse { Items = productGetDtos, StatusCode = 200 };
+            if (product == null)
+            {
+                return new ApiResponse { StatusCode = 404, Message = "Product not found" };
+            }
+
+            ProductGetDto productGet = _mapper.Map<ProductGetDto>(product);
+            productGet.CategoryName = product.Category.Name;
+
+            return new ApiResponse { StatusCode = 200, Items = productGet };
         }
 
-        Task<ApiResponse> IProductService.RemoveAsync(int id)
+        public async Task<ApiResponse> RemoveAsync(int id)
         {
-            throw new NotImplementedException();
+            Product product = await _productRepository.GetAsync(x => !x.IsDeleted && x.Id == id);
+
+            if (product == null)
+            {
+                return new ApiResponse { StatusCode = 404, Message = "Product not found" };
+            }
+
+            product.IsDeleted = true;
+            await _productRepository.Update(product);
+            await _productRepository.SaveAsync();
+            return new ApiResponse { StatusCode = 204 };
         }
 
-        Task<ApiResponse> IProductService.UpdateAsync(int id, Dtos.Categories.ProductPostDto dto)
+        public async Task<ApiResponse> UpdateAsync(int id, ProductUpdateDto dto)
         {
-            throw new NotImplementedException();
+            Product product = await _productRepository.GetAsync(x => !x.IsDeleted && x.Id == id);
+
+            if (product == null)
+            {
+                return new ApiResponse { StatusCode = 404, Message = "Product not found" };
+            }
+
+            product.Name=dto.Name;
+            product.Price = dto.Price;
+            product.CategoryId=dto.CategoryId;
+            product.Image = dto.File == null ? product.Image : dto.File.SaveFile(_env.WebRootPath, "assets/images");
+            await _productRepository.Update(product);
+            await _productRepository.SaveAsync();
+            return new ApiResponse { StatusCode = 204 };
         }
+
     }
 }
 
