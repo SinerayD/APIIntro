@@ -7,6 +7,8 @@ using APIIntro.Service.Responses;
 using APIIntro.Service.Services.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Xml.Linq;
 
@@ -18,13 +20,15 @@ namespace APIIntro.Service.Services.Implementations
         private readonly ICategoryRepository _categoryRepository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env;
+        private readonly IHttpContextAccessor _http;
 
-        public ProductService(IProductRepository productRepository, IMapper mapper, IWebHostEnvironment env, ICategoryRepository categoryRepository)
+        public ProductService(IProductRepository productRepository, IMapper mapper, IWebHostEnvironment env, ICategoryRepository categoryRepository, IHttpContextAccessor http)
         {
             _productRepository = productRepository;
             _mapper = mapper;
             _env = env;
             _categoryRepository = categoryRepository;
+            _http = http;
         }
 
         public async Task<ApiResponse> CreateAsync(ProductPostDto dto)
@@ -36,6 +40,7 @@ namespace APIIntro.Service.Services.Implementations
 
             Product product = _mapper.Map<Product>(dto);
             product.Image = dto.File.SaveFile(_env.WebRootPath, "assets/images");
+            product.ImageUrl = _http.HttpContext.Request.Scheme + "://" + _http.HttpContext.Request.Host +$"/assets/images/{product.Image}";
             await _productRepository.AddAsync(product);
             await _productRepository.SaveAsync();
 
@@ -47,7 +52,7 @@ namespace APIIntro.Service.Services.Implementations
         {
             var query = await _productRepository.GetAllAsync(x => !x.IsDeleted,"Category");
             IEnumerable<ProductGetDto> productGetDtos = await query
-                .Select(x => new ProductGetDto { Image = x.Image, CategoryId = x.CategoryId, Name = x.Name, Price = x.Price, 
+                .Select(x => new ProductGetDto { Image = x.Image,ImageUrl=x.ImageUrl, CategoryId = x.CategoryId, Name = x.Name, Price = x.Price, 
                     CategoryName=x.Category.Name })
                 .ToListAsync();
 

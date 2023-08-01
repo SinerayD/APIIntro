@@ -1,6 +1,5 @@
 ﻿using APIIntro.Service.Dtos.Products;
 using APIIntro.Service.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace APIIntro.Controllers
@@ -32,7 +31,7 @@ namespace APIIntro.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductPostDto dto)
+        public async Task<IActionResult> Create([FromForm] ProductPostDto dto)
         {
             var result = await _productService.CreateAsync(dto);
             return StatusCode(result.StatusCode, result);

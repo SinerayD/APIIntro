@@ -9,9 +9,9 @@ namespace APIIntro.Profiles.Categories
     {
         public CategoryProfile()
         {
-            CreateMap<ProductPostDto, Category>();
-            CreateMap<ProductUpdateDto, Category>();
-            CreateMap<Category,ProductGetDto>();
+            CreateMap<CategoryPostDto, Category>();
+            CreateMap<CategoryUpdateDto, Category>();
+            CreateMap<Category, CategoryGetDto>();
         }
     }
 }
